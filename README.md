@@ -168,10 +168,10 @@ Follow these steps to get the entire microservices ecosystem up and running.
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/your-repo-name.git
-cd your-repo-name
+git https://github.com/hemaabokila/-api-gateway-microservices.git
+cd -api-gateway-microservices
 ```
-**(Replace `your-username/your-repo-name.git` with your actual repository URL)**
+**(Replace `hemaabokila/-api-gateway-microservices.git` with your actual repository URL)**
 
 ### 2. Initial Setup for Database Migrations (Alembic)
 This step is crucial and needs to be done once per microservice locally to initialize the `migrations/` folder and generate the initial migration script.
@@ -426,4 +426,4 @@ Contributions are welcome! If you have ideas for improvements, bug fixes, or new
 6. Open a Pull Request.
 
 # License
-This project is licensed under the MIT [License] - see the (LICENSE) file for details.
+This project is licensed under the MIT [LICENSE](LICENSE).
