@@ -2,7 +2,7 @@
 
 ![Docker](https://img.shields.io/badge/docker-ready-blue)
 ![CI/CD](https://img.shields.io/github/actions/workflow/status/your-username/your-repo-name/gateway_ci.yml?label=Gateway%20CI)
-![License](https://img.shields.io/github/license/your-username/your-repo-name)
+![License](https://img.shields.io/badge/License-MIT-green)
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue)
 ![Flask](https://img.shields.io/badge/flask-2.x-lightgrey)
 ![Pytest](https://img.shields.io/badge/tests-pytest-blue)
@@ -168,10 +168,10 @@ Follow these steps to get the entire microservices ecosystem up and running.
 ### 1. Clone the Repository
 
 ```bash
-git https://github.com/hemaabokila/-api-gateway-microservices.git
+git https://github.com/hemaabokila/api-gateway-microservices.git
 cd -api-gateway-microservices
 ```
-**(Replace `hemaabokila/-api-gateway-microservices.git` with your actual repository URL)**
+**(Replace `hemaabokila/api-gateway-microservices.git` with your actual repository URL)**
 
 ### 2. Initial Setup for Database Migrations (Alembic)
 This step is crucial and needs to be done once per microservice locally to initialize the `migrations/` folder and generate the initial migration script.
