@@ -169,7 +169,7 @@ Follow these steps to get the entire microservices ecosystem up and running.
 
 ```bash
 git https://github.com/hemaabokila/api-gateway-microservices.git
-cd -api-gateway-microservices
+cd api-gateway-microservices
 ```
 **(Replace `hemaabokila/api-gateway-microservices.git` with your actual repository URL)**
 
