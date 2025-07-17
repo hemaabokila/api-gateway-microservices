@@ -1,0 +1,13 @@
+Flask
+requests
+python-dotenv
+PyJWT
+Werkzeug
+Flask-Limiter
+redis
+Flask-RESTx
+pybreaker
+prometheus_client
+python-consul
+pytest
+dependencies

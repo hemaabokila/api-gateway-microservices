@@ -1,0 +1,14 @@
+Flask
+Flask-SQLAlchemy
+Werkzeug
+Flask-Marshmallow
+marshmallow-sqlalchemy
+Flask-RESTx
+prometheus_client
+python-consul
+python-dotenv
+alembic
+Flask-Migrate
+pika
+pytest
+gunicorn

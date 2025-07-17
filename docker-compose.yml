@@ -1,0 +1,204 @@
+version: '3.8'
+
+services:
+  consul:
+    image: consul:1.10.4
+    container_name: consul
+    ports:
+      - "8500:8500"
+      - "8600:8600/udp"
+    command: agent -dev -client=0.0.0.0 -ui
+    healthcheck:
+      test: ["CMD", "consul", "members"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    networks:
+      - microservices-network
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - microservices-network
+
+  redis_cache:
+    image: redis:6-alpine
+    container_name: redis_cache
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 3s
+      retries: 5
+      start_period: 3s
+    networks:
+      - microservices-network
+
+  gateway:
+    build: ./gateway
+    ports:
+      - "5000:5000"
+    environment:
+      JWT_SECRET_KEY: your_super_secret_jwt_key
+      RATE_LIMIT_MAX_REQUESTS: 100
+      RATE_LIMIT_WINDOW_SECONDS: 60
+      LOG_LEVEL: INFO
+      REDIS_HOST: redis_cache
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+      DEFAULT_CACHE_TTL_SECONDS: 300
+      CB_FAILURE_THRESHOLD: 5
+      CB_RECOVERY_TIMEOUT_SECONDS: 30
+      CB_HALF_OPEN_TIMEOUT_SECONDS: 5
+      CONSUL_HOST: consul
+      CONSUL_PORT: 8500
+      SERVICE_NAME: gateway
+      SERVICE_PORT: 5000
+      SERVICE_ADDRESS: gateway
+      HEALTH_CHECK_INTERVAL: 10s
+      HEALTH_CHECK_TIMEOUT: 5s
+      HEALTH_CHECK_DEREGISTER_CRITICAL_SERVICE_AFTER: 1m
+    depends_on:
+      consul:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis_cache:
+        condition: service_healthy
+    networks:
+      - microservices-network
+
+  users_service:
+    build: ./microservices/users_service
+    ports:
+      - "5001:5001"
+    environment:
+      FLASK_APP: app
+      FLASK_DEBUG: True
+      DATABASE_URL: sqlite:///users.db
+      CONSUL_HOST: consul
+      CONSUL_PORT: 8500
+      SERVICE_NAME: users_service
+      SERVICE_PORT: 5001
+      SERVICE_ADDRESS: users_service
+      HEALTH_CHECK_INTERVAL: 10s
+      HEALTH_CHECK_TIMEOUT: 5s
+      HEALTH_CHECK_DEREGISTER_CRITICAL_SERVICE_AFTER: 1m
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      RABBITMQ_EVENTS_EXCHANGE: user_events_exchange
+      RABBITMQ_EVENTS_EXCHANGE_TYPE: topic
+      SERVICE_ID: users_service
+      # SERVICE_TAGS: ["users", "api"]
+    depends_on:
+      consul:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - microservices-network
+
+  products_service:
+    build: ./microservices/products_service
+    ports:
+      - "5002:5002"
+    environment:
+      FLASK_APP: app
+      FLASK_DEBUG: True
+      DATABASE_URL: sqlite:///products.db
+      CONSUL_HOST: consul
+      CONSUL_PORT: 8500
+      SERVICE_NAME: products_service
+      SERVICE_PORT: 5002
+      SERVICE_ADDRESS: products_service
+      HEALTH_CHECK_INTERVAL: 10s
+      HEALTH_CHECK_TIMEOUT: 5s
+      HEALTH_CHECK_DEREGISTER_CRITICAL_SERVICE_AFTER: 1m
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      RABBITMQ_EVENTS_EXCHANGE: product_events_exchange
+      RABBITMQ_EVENTS_EXCHANGE_TYPE: topic
+      SERVICE_ID: products_service
+      # SERVICE_TAGS: ["products", "api"]
+    depends_on:
+      consul:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - microservices-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command: --config.file=/etc/prometheus/prometheus.yml --web.enable-remote-write-receiver --web.enable-lifecycle
+    depends_on:
+      gateway:
+        condition: service_started
+      users_service:
+        condition: service_started
+      products_service:
+        condition: service_started
+    networks:
+      - microservices-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      prometheus:
+        condition: service_started
+    networks:
+      - microservices-network
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "80:80"
+    depends_on:
+      gateway:
+        condition: service_started
+    networks:
+      - microservices-network
+
+networks:
+  microservices-network:
+    driver: bridge
+
+volumes:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+  
